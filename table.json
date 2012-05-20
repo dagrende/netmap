@@ -1,0 +1,5 @@
+[{id:1,name:"grej a",x:10,y:20},
+ {id:2,name:"grej b",x:20,y:20},
+ {id:3,name:"grej c",x:50,y:30},
+ {id:4,name:"grej d",x:70,y:50},
+ {id:5,name:"grej e",x:1000,y:1000}]
