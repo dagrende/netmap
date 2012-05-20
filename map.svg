@@ -3,16 +3,7 @@
   "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" onload="init(evt);" >
 	<script type="text/ecmascript" xlink:href="net.js"></script>
-	<script type="text/ecmascript" xlink:href="tooltip.js"></script>
 	<image  width='1960' height='1226' xlink:href="flysta-part.png"/>
 
 	<g id="nodes"></g>
-
-	<g id='ToolTip' opacity='0.8' visibility='hidden' pointer-events='none'>
-		<rect id='tipbox' x='0' y='5' width='88' height='20' rx='2' ry='2' fill='white' stroke='black'/>
-		<text id='tipText' x='5' y='20' font-family='Arial' font-size='12'>
-			<tspan id='tipTitle' x='5' font-weight='bold'><![CDATA[]]></tspan>
-			<tspan id='tipDesc' x='5' dy='15' fill='blue'><![CDATA[]]></tspan>
-		</text>
-	</g>
 </svg>

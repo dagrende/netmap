@@ -3,12 +3,12 @@ var nodes;
 var nodesById;
 
 function init(evt) {
-	initTooltips(evt);
+	SVGDocument = evt.target.ownerDocument;
+	SVGRoot = SVGDocument.documentElement;
 
 	nodes = getJsonByHttp("table.json");
 	nodesById = getNodesById(nodes);
 	createNodes(nodes);
-	traverse(nodes);
 
 	SVGRoot.addEventListener('click', clickEventHandler, false);
 }
@@ -58,7 +58,6 @@ function getJsonByHttp(url) {
 
 function clickEventHandler(evt) {
 	if (evt.ctrlKey && evt.altKey) {
-		GetTrueCoords( evt );
 		var id = nodes.length + 1;
 		var newRect = document.getElementById(id);
 		if (newRect == null) {
