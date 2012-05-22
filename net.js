@@ -1,4 +1,5 @@
 var svgNS = "http://www.w3.org/2000/svg";
+var xlinkNS = "http://www.w3.org/1999/xlink";
 var nodes;
 
 function init(evt) {
@@ -42,8 +43,11 @@ function createSvgNodes(nodes) {
 
 		var svgObj = document.getElementById(node.id);
 		if (svgObj == null) {
+			var ael = document.createElementNS(svgNS,"a");
+			ael.setAttributeNS(xlinkNS, "xlink:href","editnode.php?id=" + node.id + "&return=map.svg");
 			svgObj = document.createElementNS(svgNS,"circle");
-			document.getElementById("nodes").appendChild(svgObj);
+			document.getElementById("nodes").appendChild(ael);
+			ael.appendChild(svgObj);
 			node.svgObj = svgObj;
 		}
 		svgObj.setAttributeNS(null, "id", node.id);	
@@ -52,6 +56,7 @@ function createSvgNodes(nodes) {
 		svgObj.setAttributeNS(null, "cy", node.y);	
 		svgObj.setAttributeNS(null, "fill","gray");
 		svgObj.setAttributeNS(null, "stroke","white");
+		
 	}
 }
 
