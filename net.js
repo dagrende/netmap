@@ -49,20 +49,19 @@ function createSvgNodes(nodes) {
 			document.getElementById("nodes").appendChild(ael);
 			ael.appendChild(svgObj);
 			node.svgObj = svgObj;
+			svgObj.setAttributeNS(null, "id", node.id);	
+			svgObj.setAttributeNS(null, "r", 6);		
+			svgObj.setAttributeNS(null, "cx", node.x);		
+			svgObj.setAttributeNS(null, "cy", node.y);	
+			svgObj.setAttributeNS(null, "fill","gray");
+			svgObj.setAttributeNS(null, "stroke","white");
 		}
-		svgObj.setAttributeNS(null, "id", node.id);	
-		svgObj.setAttributeNS(null, "r", 6);		
-		svgObj.setAttributeNS(null, "cx", node.x);		
-		svgObj.setAttributeNS(null, "cy", node.y);	
-		svgObj.setAttributeNS(null, "fill","gray");
-		svgObj.setAttributeNS(null, "stroke","white");
-		
 	}
 }
 
 function clickEventHandler(evt) {
 	if (evt.ctrlKey && evt.altKey) {
-		var newNode = {id: nextFreeId(), name: 'qwe', x: evt.clientX, y: evt.clientY}
+		var newNode = {id: nextFreeId(), name: '', x: evt.clientX, y: evt.clientY}
 		nodes.push(newNode);
 		createSvgNodes(nodes);
 		createRemoteNode(newNode);
@@ -70,18 +69,7 @@ function clickEventHandler(evt) {
 }
 
 function createRemoteNode(newNode) {
-	getJsonByHttp("addnode.php?name=" + newNode.name + "&host=217.76.87.118&x=" + newNode.x + "&y=" + newNode.y);
-}
-
-function stringify(obj) {
-	s = "";
-	for (key in obj) {
-		if (s != "") {
-			s += ", ";
-		}
-		s += '"' + key + '":"' + obj[key] + '"';
-	}
-	return "{" + s + "}";
+	getJsonByHttp("addnode.php?name=" + newNode.name + "&host=&x=" + newNode.x + "&y=" + newNode.y);
 }
 
 function ajax(url, vars, t, callbackFunction) {
