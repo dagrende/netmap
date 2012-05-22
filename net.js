@@ -1,44 +1,23 @@
 var svgNS = "http://www.w3.org/2000/svg";
 var nodes;
-var nodesById;
 
 function init(evt) {
 	SVGDocument = evt.target.ownerDocument;
 	SVGRoot = SVGDocument.documentElement;
 
-	nodes = getJsonByHttp("table.json");
-	nodesById = getNodesById(nodes);
-	createNodes(nodes);
+	nodes = getJsonByHttp("getnodes.php");
+	createSvgNodes(nodes);
+	traverse(nodes);
 
 	SVGRoot.addEventListener('click', clickEventHandler, false);
 }
 
-function ajax(url, vars, callbackFunction) {
-	var request =  new XMLHttpRequest();
-	request.open("GET", url, true);
-	request.setRequestHeader("Content-Type", "application/x-javascript;");
-
-	request.onreadystatechange = function() {
-		if (request.readyState == 4 && request.status == 200) {
-			if (request.responseText) {
-				callbackFunction(request.responseText);
-			}
-		}
-	};
-	request.send(vars);
-}
-
 function traverse(nodes) {
-		for (var i in nodes) {
+	for (var i in nodes) {
 		var node = nodes[i];
-
-		el.innerHTML = '<img src="/wait2.gif"></img>';
-		el.setAttribute('title', el.getAttribute('host'));
-		ajax('/cgi-bin/ping.cgi?host=' + el.getAttribute('host'), null, function(s) {el.innerHTML = s;});
-	}
-	var nodes = el.childNodes;
-	for (var i = 0; i < nodes.length; i++) {
-		traverse(nodes[i]);
+		node.svgObj.setAttributeNS(null, "fill","gray");
+		ajax('/cgi-bin/ping.cgi?host=' + node.host, null, node.svgObj, function(s, t) {
+			t.setAttributeNS(null, "fill", (s.charAt(0) != '-' ? "lime" : "red"))});
 	}
 }
 
@@ -56,51 +35,83 @@ function getJsonByHttp(url) {
 	}
 }
 
+// create a node for each item in the nodes table, or use existing node if created already
+function createSvgNodes(nodes) {
+	for (var i in nodes) {
+		var node = nodes[i];
+
+		var svgObj = document.getElementById(node.id);
+		if (svgObj == null) {
+			svgObj = document.createElementNS(svgNS,"circle");
+			document.getElementById("nodes").appendChild(svgObj);
+			node.svgObj = svgObj;
+		}
+		svgObj.setAttributeNS(null, "id", node.id);	
+		svgObj.setAttributeNS(null, "r", 6);		
+		svgObj.setAttributeNS(null, "cx", node.x);		
+		svgObj.setAttributeNS(null, "cy", node.y);	
+		svgObj.setAttributeNS(null, "fill","gray");
+		svgObj.setAttributeNS(null, "stroke","white");
+	}
+}
+
 function clickEventHandler(evt) {
 	if (evt.ctrlKey && evt.altKey) {
-		var id = nodes.length + 1;
-		var newRect = document.getElementById(id);
-		if (newRect == null) {
-			newRect = document.createElementNS(svgNS,"circle");
-		}
-		newRect.setAttributeNS(null, "id", id);	
-		newRect.setAttributeNS(null, "r", 4);		
-		newRect.setAttributeNS(null, "cx", evt.clientX);
-		newRect.setAttributeNS(null, "cy", evt.clientY);
-		newRect.setAttributeNS(null, "fill","red");
-		newRect.setAttributeNS(null, "stroke","white");
-		document.getElementById("nodes").appendChild(newRect);
+		var newNode = {id: nextFreeId(), name: 'qwe', x: evt.clientX, y: evt.clientY}
+		nodes.push(newNode);
+		createSvgNodes(nodes);
+		createRemoteNode(newNode);
 	}
 }
 
+function createRemoteNode(newNode) {
+	getJsonByHttp("addnode.php?name=" + newNode.name + "&host=217.76.87.118&x=" + newNode.x + "&y=" + newNode.y);
+}
 
-function getNodesById(nodes) {
-	var nodesById = {};
+function stringify(obj) {
+	s = "";
+	for (key in obj) {
+		if (s != "") {
+			s += ", ";
+		}
+		s += '"' + key + '":"' + obj[key] + '"';
+	}
+	return "{" + s + "}";
+}
+
+function ajax(url, vars, t, callbackFunction) {
+	var request =  new XMLHttpRequest();
+	request.open("GET", url, true);
+	request.setRequestHeader("Content-Type", "application/x-javascript;");
+
+	request.onreadystatechange = function() {
+		if (request.readyState == 4 && request.status == 200) {
+			if (request.responseText) {
+				callbackFunction(request.responseText, t);
+			}
+		}
+	};
+	request.send(vars);
+}
+
+function nextFreeId() {
+	var maxid = -1;
 	for (var i in nodes) {
 		var node = nodes[i];
-		nodesById[node.id] = node;
+		maxid = Math.max(node.id, maxid);
 	}
-	return nodesById;
+	return maxid + 1;
 }
 
-// create node markers from a tble of nodes having id, name, x, y
-// node with id created only if doesn't exist already, otherwise attributes are set
-function createNodes(nodes) {
+
+function getNodeById(id) {
 	for (var i in nodes) {
 		var node = nodes[i];
-
-		var newRect = document.getElementById(node.id);
-		if (newRect == null) {
-			newRect = document.createElementNS(svgNS,"circle");
+		if (node.id == id) {
+			return node;
 		}
-		newRect.setAttributeNS(null, "id", node.id);	
-		newRect.setAttributeNS(null, "r", 4);		
-		newRect.setAttributeNS(null, "cx", node.x);		
-		newRect.setAttributeNS(null, "cy", node.y);	
-		newRect.setAttributeNS(null, "fill","red");
-		newRect.setAttributeNS(null, "stroke","white");
-		document.getElementById("nodes").appendChild(newRect);
-
 	}
+	return null;
 }
+
 

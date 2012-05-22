@@ -1,5 +1,6 @@
-[{id:1,name:"grej a",x:10,y:20},
- {id:2,name:"grej b",x:20,y:20},
- {id:3,name:"grej c",x:50,y:30},
- {id:4,name:"grej d",x:70,y:50},
- {id:5,name:"grej e",x:1000,y:1000}]
+[{"id":1, "name":"Smedshage", "host":"217.76.87.118", "x":10, "y":20},
+ {"id":2, "name":"Carlenäs", "host":"217.76.87.114", "x":20, "y":20},
+ {"id":3, "name":"Skog", "host":"217.76.87.125", "x":50, "y":30},
+ {"id":4, "name":"Engberg", "host":"217.76.87.113", "x":70, "y":50},
+ {"id":5, "name":"Vuksanovic", "host":"217.76.87.119", "x":1000, "y":1000}]
+

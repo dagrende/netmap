@@ -1,0 +1,7 @@
+create table node (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	name varchar(256),
+	host varchar(256),
+	x number,
+	y number
+);
