@@ -1,6 +1,7 @@
 var svgNS = "http://www.w3.org/2000/svg";
 var xlinkNS = "http://www.w3.org/1999/xlink";
 var nodes;
+var mouseMan = new MouseMan();
 
 function init(evt) {
 	SVGDocument = evt.target.ownerDocument;
@@ -36,6 +37,15 @@ function getJsonByHttp(url) {
 	}
 }
 
+function DragHandler() {
+	this.click = function (evt) {}
+	this.onmousedown = function (evt) {}
+	this.onmouseup = function (evt) {}
+	this.onmouseover = function (evt) {alert("click!!");}
+	this.onmousemove = function (evt) {}
+	this.onmouseout = function (evt) {}
+};
+
 // create a node for each item in the nodes table, or use existing node if created already
 function createSvgNodes(nodes) {
 	for (var i in nodes) {
@@ -43,10 +53,27 @@ function createSvgNodes(nodes) {
 
 		var svgObj = document.getElementById(node.id);
 		if (svgObj == null) {
+			var docnodes = document.getElementById("nodes");
 			var ael = document.createElementNS(svgNS,"a");
 			ael.setAttributeNS(xlinkNS, "xlink:href","editnode.php?id=" + node.id + "&return=map.svg");
+
+			if (true) {
+				svgObjb = document.createElementNS(svgNS,"circle");
+				docnodes.appendChild(svgObjb);
+				svgObjb.setAttributeNS(null, "id", "b" + node.id);	
+				svgObjb.setAttributeNS(null, "r", 16);		
+				svgObjb.setAttributeNS(null, "cx", node.x);		
+				svgObjb.setAttributeNS(null, "cy", node.y);	
+				svgObjb.setAttributeNS(null, "fill","gray");
+				svgObjb.setAttributeNS(null, "stroke","white");
+				mouseMan.addListeners(svgObjb);
+//				mouseMan.setMouseHandler(new DragHandler());
+//				svgObjb.addEventListener('click', relClick, false);
+			}
+
+			docnodes.appendChild(ael);
+
 			svgObj = document.createElementNS(svgNS,"circle");
-			document.getElementById("nodes").appendChild(ael);
 			ael.appendChild(svgObj);
 			node.svgObj = svgObj;
 			svgObj.setAttributeNS(null, "id", node.id);	
@@ -57,6 +84,10 @@ function createSvgNodes(nodes) {
 			svgObj.setAttributeNS(null, "stroke","white");
 		}
 	}
+}
+
+function relClick(evt) {
+	alert('relClick');
 }
 
 function clickEventHandler(evt) {
