@@ -2,7 +2,6 @@ var svgNS = "http://www.w3.org/2000/svg";
 var xlinkNS = "http://www.w3.org/1999/xlink";
 var nodes;
 var rels;
-var mouseMan = new MouseMan();
 
 function init(evt) {
 	SVGDocument = evt.target.ownerDocument;
@@ -15,8 +14,7 @@ function init(evt) {
 	traverse(nodes);
 
 	SVGRoot.addEventListener('click', clickEventHandler, false);
-	mouseMan.addListeners(SVGRoot);
-	mouseMan.setMouseHandler(new MouseEventHandler());
+	addMouseEventHandler(SVGRoot, new MouseEventHandler());
 }
 
 function traverse(nodes) {
@@ -56,12 +54,20 @@ function getByHttp(url) {
 	}
 }
 
-function getNearestNode(x, y) {
+// returns the node closest to x, y if closer than d, else null
+function getNearNode(x, y, d) {
+	var minDist = 9999999;
+	var nearestNode = null;
 	for (var i in nodes) {
 		var node = nodes[i];
 		
-		
+		dist = pow(node.x - x, 2) + pow(node.y - y, 2)
+		if (dist < minDist) {
+			minDist = dist;
+			nearestNode = node;
+		}
 	}
+	return minDist < d * d ? nearestNode : null;
 }
 
 function relClickHandler(evt) {
@@ -69,6 +75,15 @@ function relClickHandler(evt) {
 	if (rel) {
 		window.location="editrel.php?srcNode=" + rel.srcNode + "&destNode=" + rel.destNode + "&return=map.svg";
 	}
+}
+
+function addMouseEventHandler(obj, handler) {
+	obj.addEventListener('click', handler.handle, false);
+	obj.addEventListener('mousedown', handler.handle, false);
+	obj.addEventListener('mouseup', handler.handle, false);
+	obj.addEventListener('mouseover', handler.handle, false);
+	obj.addEventListener('mousemove', handler.handle, false);
+	obj.addEventListener('mouseout', handler.handle, false);
 }
 
 function MouseEventHandler() {
