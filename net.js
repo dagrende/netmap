@@ -16,7 +16,7 @@ function init(evt) {
 
 	SVGRoot.addEventListener('click', clickEventHandler, false);
 	mouseMan.addListeners(SVGRoot);
-	mouseMan.setMouseHandler(new DragHandler());
+	mouseMan.setMouseHandler(new MouseEventHandler());
 }
 
 function traverse(nodes) {
@@ -52,48 +52,55 @@ function getNearestNode(x, y) {
 	}
 }
 
-function DragHandler() {
-	var t = {state: 0}
-	this.click = function (evt) {
-		console.log("DragHandler.click");
-	}
-	this.mousedown = function (evt) {
-		console.log("DragHandler.down");
-		if (t.state == 1) {
-			t.state = 2;
-			t.srcNode = evt.target;
-		}
-	}
-	this.mouseup = function (evt) {
-		console.log("DragHandler.up");
-		if (t.state == 2) {
-			t.state = 0;
-		} else if (t.state == 3) {
-			t.state = 0;
-			createRelation(t.srcNode, evt.target);
-		}
-	}
-	this.mouseover = function (evt) {
-		console.log("DragHandler.over");
-		if (t.state == 0) {
-			if (evt.target.isAroundNode) {
-				t.state = 1;
+function MouseEventHandler() {
+	var states = {wait_for_src:0, at_src:1, dragging_rel:2, at_dest:3}
+	var t = {state: states.wait_for_src}
+	this.handle = function (evt) {
+		console.log(evt.type);
+		switch(t.state) {
+  	case states.wait_for_src:
+			switch (evt.type) {
+			case "mouseover":
+				if (evt.target.isNode) {
+					t.state = states.at_src;
+				}
+				break;
 			}
-		} else if (t.state == 2) {
-			if (evt.target.isAroundNode && evt.target != t.srcNode) {
-				t.state = 3;
+			break;
+		case states.at_src:
+			switch (evt.type) {
+			case "mousedown":
+				t.state = states.dragging_rel;
+				t.srcNode = evt.target;
+				break;
+			case "mouseout":
+				t.state = states.wait_for_src;
+				break;
 			}
-		}
-	}
-	this.mousemove = function (evt) {
-		console.log("DragHandler.move");
-	}
-	this.mouseout = function (evt) {
-		console.log("DragHandler.out");
-		if (t.state == 1) {
-			t.state = 0;
-		} else if (t.state == 3) {
-			t.state = 2;
+			break;
+		case states.dragging_rel:
+			switch (evt.type) {
+			case "mouseup":
+				t.state = states.wait_for_src;
+				break;
+			case "mouseover":
+				if (evt.target.isNode && evt.target != t.srcNode) {
+					t.state = states.at_dest;
+				}
+				break;
+			}
+			break;
+		case states.at_dest:
+			switch (evt.type) {
+			case "mouseup":
+				t.state = states.wait_for_src;
+				createRelation(t.srcNode, evt.target);
+				break;
+			case "mouseout":
+				t.state = states.dragging_rel;
+				break;
+			}
+			break;
 		}
 	}
 };
