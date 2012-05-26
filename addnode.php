@@ -1,8 +1,8 @@
 <?
 include 'config.php';
 
-function quote(s) {
-	return str_replace("'", "''", s);
+function quote($s) {
+	return str_replace("'", "''", $s);
 }
 
 $name = quote($_GET['name']);

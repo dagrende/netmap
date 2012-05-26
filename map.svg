@@ -7,5 +7,6 @@
 	<script type="text/ecmascript" xlink:href="net.js"></script>
 	<image  width='1960' height='1226' xlink:href="flysta-part.png"/>
 
+	<g id="rels"></g>
 	<g id="nodes"></g>
 </svg>

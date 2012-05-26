@@ -5,3 +5,10 @@ create table node (
 	x number,
 	y number
 );
+
+create table rel (
+	srcNode integer,
+	destNode integer,
+	primary key (srcNode, destNode)
+);
+

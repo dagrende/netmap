@@ -1,6 +1,7 @@
 var svgNS = "http://www.w3.org/2000/svg";
 var xlinkNS = "http://www.w3.org/1999/xlink";
 var nodes;
+var rels;
 var mouseMan = new MouseMan();
 
 function init(evt) {
@@ -8,18 +9,24 @@ function init(evt) {
 	SVGRoot = SVGDocument.documentElement;
 
 	nodes = getJsonByHttp("getnodes.php");
+	rels = getJsonByHttp("getrels.php");
 	createSvgNodes(nodes);
+	createSvgRels(rels);
 	traverse(nodes);
 
 	SVGRoot.addEventListener('click', clickEventHandler, false);
+	mouseMan.addListeners(SVGRoot);
+	mouseMan.setMouseHandler(new DragHandler());
 }
 
 function traverse(nodes) {
 	for (var i in nodes) {
 		var node = nodes[i];
 		node.svgObj.setAttributeNS(null, "fill","gray");
-		ajax('/cgi-bin/ping.cgi?host=' + node.host, null, node.svgObj, function(s, t) {
-			t.setAttributeNS(null, "fill", (s.charAt(0) != '-' ? "lime" : "red"))});
+		if (node.host) {
+			ajax('/cgi-bin/ping.cgi?host=' + node.host, null, node.svgObj, function(s, t) {
+				t.setAttributeNS(null, "fill", (s.charAt(0) != '-' ? "lime" : "red"))});
+		}
 	}
 }
 
@@ -37,14 +44,89 @@ function getJsonByHttp(url) {
 	}
 }
 
+function getNearestNode(x, y) {
+	for (var i in nodes) {
+		var node = nodes[i];
+		
+		
+	}
+}
+
 function DragHandler() {
-	this.click = function (evt) {}
-	this.onmousedown = function (evt) {}
-	this.onmouseup = function (evt) {}
-	this.onmouseover = function (evt) {alert("click!!");}
-	this.onmousemove = function (evt) {}
-	this.onmouseout = function (evt) {}
+	var t = {state: 0}
+	this.click = function (evt) {
+		console.log("DragHandler.click");
+	}
+	this.mousedown = function (evt) {
+		console.log("DragHandler.down");
+		if (t.state == 1) {
+			t.state = 2;
+			t.srcNode = evt.target;
+		}
+	}
+	this.mouseup = function (evt) {
+		console.log("DragHandler.up");
+		if (t.state == 2) {
+			t.state = 0;
+		} else if (t.state == 3) {
+			t.state = 0;
+			createRelation(t.srcNode, evt.target);
+		}
+	}
+	this.mouseover = function (evt) {
+		console.log("DragHandler.over");
+		if (t.state == 0) {
+			if (evt.target.isAroundNode) {
+				t.state = 1;
+			}
+		} else if (t.state == 2) {
+			if (evt.target.isAroundNode && evt.target != t.srcNode) {
+				t.state = 3;
+			}
+		}
+	}
+	this.mousemove = function (evt) {
+		console.log("DragHandler.move");
+	}
+	this.mouseout = function (evt) {
+		console.log("DragHandler.out");
+		if (t.state == 1) {
+			t.state = 0;
+		} else if (t.state == 3) {
+			t.state = 2;
+		}
+	}
 };
+
+function createRelation(src, dest) {
+	console.log("createRelation");
+	rels.push({srcNode:src.id, destNode:dest.id});
+	createSvgRels(rels);
+	console.log("addrel.php?srcNode=" + src.id + "&destNode=" + dest.id);
+	getJsonByHttp("addrel.php?srcNode=" + src.id + "&destNode=" + dest.id);
+}
+
+function createSvgRels(rels) {
+	for (var i in rels) {
+		var rel = rels[i];
+
+		var path = document.getElementById(rel.srcNode + '-' + rel.destNode);
+		if (path == null) {
+			var src = document.getElementById(rel.srcNode);
+			var dest = document.getElementById(rel.destNode);
+			var path = document.createElementNS(svgNS,"path");
+			path.setAttributeNS(null, "id", rel.srcNode + '-' + rel.destNode);
+			path.setAttributeNS(null, "d", 
+					"M " + src.getAttributeNS(null, "cx") +
+					" " + src.getAttributeNS(null, "cy") +
+					" L " + dest.getAttributeNS(null, "cx") +
+					" " + dest.getAttributeNS(null, "cy"));
+			path.setAttributeNS(null, "stroke", "black");
+			path.setAttributeNS(null, "stroke-width", "3");
+			document.getElementById("rels").appendChild(path);
+		}
+	}
+}
 
 // create a node for each item in the nodes table, or use existing node if created already
 function createSvgNodes(nodes) {
@@ -66,8 +148,7 @@ function createSvgNodes(nodes) {
 				svgObjb.setAttributeNS(null, "cy", node.y);	
 				svgObjb.setAttributeNS(null, "fill","gray");
 				svgObjb.setAttributeNS(null, "stroke","white");
-				mouseMan.addListeners(svgObjb);
-//				mouseMan.setMouseHandler(new DragHandler());
+				svgObjb.isAroundNode = true;
 //				svgObjb.addEventListener('click', relClick, false);
 			}
 
@@ -82,6 +163,7 @@ function createSvgNodes(nodes) {
 			svgObj.setAttributeNS(null, "cy", node.y);	
 			svgObj.setAttributeNS(null, "fill","gray");
 			svgObj.setAttributeNS(null, "stroke","white");
+			svgObj.isNode = true;
 		}
 	}
 }
