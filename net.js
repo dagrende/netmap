@@ -44,11 +44,30 @@ function getJsonByHttp(url) {
 	}
 }
 
+function getByHttp(url) {
+	var xmlHttp = new XMLHttpRequest();
+	xmlHttp.open("GET", url, false);
+	xmlHttp.send(null);
+	if (xmlHttp.status == 200) {
+		return xmlHttp.responseText;
+	} else {
+		alert("Error getting " + url + ". Status=" + xmlHttp.status);
+		return null;
+	}
+}
+
 function getNearestNode(x, y) {
 	for (var i in nodes) {
 		var node = nodes[i];
 		
 		
+	}
+}
+
+function relClickHandler(evt) {
+	var rel = evt.target.rel;
+	if (rel) {
+		window.location="editrel.php?srcNode=" + rel.srcNode + "&destNode=" + rel.destNode + "&return=map.svg";
 	}
 }
 
@@ -110,7 +129,7 @@ function createRelation(src, dest) {
 	rels.push({srcNode:src.id, destNode:dest.id});
 	createSvgRels(rels);
 	console.log("addrel.php?srcNode=" + src.id + "&destNode=" + dest.id);
-	getJsonByHttp("addrel.php?srcNode=" + src.id + "&destNode=" + dest.id);
+	getByHttp("addrel.php?srcNode=" + src.id + "&destNode=" + dest.id);
 }
 
 function createSvgRels(rels) {
@@ -130,7 +149,11 @@ function createSvgRels(rels) {
 					" " + dest.getAttributeNS(null, "cy"));
 			path.setAttributeNS(null, "stroke", "black");
 			path.setAttributeNS(null, "stroke-width", "3");
+			path.isRel = true;
+			path.addEventListener('click', relClickHandler, false);
 			document.getElementById("rels").appendChild(path);
+			rel.svgObj = path;
+			path.rel = rel;
 		}
 	}
 }
@@ -145,19 +168,6 @@ function createSvgNodes(nodes) {
 			var docnodes = document.getElementById("nodes");
 			var ael = document.createElementNS(svgNS,"a");
 			ael.setAttributeNS(xlinkNS, "xlink:href","editnode.php?id=" + node.id + "&return=map.svg");
-
-			if (true) {
-				svgObjb = document.createElementNS(svgNS,"circle");
-				docnodes.appendChild(svgObjb);
-				svgObjb.setAttributeNS(null, "id", "b" + node.id);	
-				svgObjb.setAttributeNS(null, "r", 16);		
-				svgObjb.setAttributeNS(null, "cx", node.x);		
-				svgObjb.setAttributeNS(null, "cy", node.y);	
-				svgObjb.setAttributeNS(null, "fill","gray");
-				svgObjb.setAttributeNS(null, "stroke","white");
-				svgObjb.isAroundNode = true;
-//				svgObjb.addEventListener('click', relClick, false);
-			}
 
 			docnodes.appendChild(ael);
 
@@ -175,21 +185,10 @@ function createSvgNodes(nodes) {
 	}
 }
 
-function relClick(evt) {
-	alert('relClick');
-}
-
 function clickEventHandler(evt) {
 	if (evt.ctrlKey && evt.altKey) {
-		var newNode = {id: nextFreeId(), name: '', x: evt.clientX, y: evt.clientY}
-		nodes.push(newNode);
-		createSvgNodes(nodes);
-		createRemoteNode(newNode);
+		window.location="editnode.php?&x=" + evt.clientX + "&y=" + evt.clientY + "&return=map.svg";
 	}
-}
-
-function createRemoteNode(newNode) {
-	getJsonByHttp("addnode.php?name=" + newNode.name + "&host=&x=" + newNode.x + "&y=" + newNode.y);
 }
 
 function ajax(url, vars, t, callbackFunction) {
@@ -206,16 +205,6 @@ function ajax(url, vars, t, callbackFunction) {
 	};
 	request.send(vars);
 }
-
-function nextFreeId() {
-	var maxid = -1;
-	for (var i in nodes) {
-		var node = nodes[i];
-		maxid = Math.max(node.id, maxid);
-	}
-	return maxid + 1;
-}
-
 
 function getNodeById(id) {
 	for (var i in nodes) {

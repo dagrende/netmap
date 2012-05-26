@@ -14,6 +14,8 @@ $y = $_GET['y'];
 
 $db = new SQLite3("$webroot/dbdir/db");
 $db->exec("insert into node(name, host, x, y) values('$name', '$host', $x, $y)");
+$newId = $db->lastInsertRowID();
 $db->close();
-?>
+?><?=$newId?>
+
 
