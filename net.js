@@ -1,5 +1,7 @@
 var svgNS = "http://www.w3.org/2000/svg";
 var xlinkNS = "http://www.w3.org/1999/xlink";
+var nodeRadius = 8;
+var logstrings = {};
 var nodes;
 var rels;
 
@@ -56,18 +58,18 @@ function getByHttp(url) {
 
 // returns the node closest to x, y if closer than d, else null
 function getNearNode(x, y, d) {
-	var minDist = 9999999;
+	var minDist2 = 9999999;
 	var nearestNode = null;
 	for (var i in nodes) {
 		var node = nodes[i];
 		
-		dist = pow(node.x - x, 2) + pow(node.y - y, 2)
-		if (dist < minDist) {
-			minDist = dist;
+		var dist2 = Math.pow(node.x - x, 2) + Math.pow(node.y - y, 2)
+		if (dist2 < minDist2) {
+			minDist2 = dist2;
 			nearestNode = node;
 		}
 	}
-	return minDist < d * d ? nearestNode : null;
+	return minDist2 < d * d && minDist2 > nodeRadius * nodeRadius ? nearestNode : null;
 }
 
 function relClickHandler(evt) {
@@ -86,29 +88,80 @@ function addMouseEventHandler(obj, handler) {
 	obj.addEventListener('mouseout', handler.handle, false);
 }
 
+function dist2(p1, p2) {
+	return Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2);
+}
+
 function MouseEventHandler() {
-	var states = {wait_for_src:0, at_src:1, dragging_rel:2, at_dest:3}
+	var states = {wait_for_src:"wait_for_src", at_rel_src:"at_rel_src", dragging_rel:"dragging_rel", at_dest:"at_dest", at_node:"at_node", can_move_node:"can_move_node", moving_node:"moving_node"}
 	var t = {state: states.wait_for_src}
 	this.handle = function (evt) {
-		console.log(evt.type);
+		log(t.state + " " + evt.type);
 		switch(t.state) {
   	case states.wait_for_src:
 			switch (evt.type) {
 			case "mouseover":
 				if (evt.target.isNode) {
-					t.state = states.at_src;
+					t.state = states.at_node;
+				}
+				break;
+			case "mousemove":
+				var nearNode = getNearNode(evt.clientX, evt.clientY, 15);
+				if (nearNode) {
+					t.state = states.at_rel_src;
+					t.srcNode = nearNode.svgObj;
 				}
 				break;
 			}
 			break;
-		case states.at_src:
+		case states.at_node:
 			switch (evt.type) {
 			case "mousedown":
-				t.state = states.dragging_rel;
-				t.srcNode = evt.target;
+				t.startpos = {x:evt.clientX, y:evt.clientY};
+				t.state = states.can_move_node;
+				t.node = evt.target;
 				break;
 			case "mouseout":
 				t.state = states.wait_for_src;
+				break;
+			}
+			break;
+		case states.can_move_node:
+			switch (evt.type) {
+			case "mousemove":
+				if (dist2(t.startpos, {x:evt.clientX, y:evt.clientY}) > 9) {
+					t.state = states.moving_node;
+				}
+				break;
+			case "mouseup":
+				t.state = states.wait_for_src;
+				clickedNode(t.node.node);
+				break;
+			}
+			break;
+		case states.moving_node:
+			switch (evt.type) {
+			case "mouseup":
+				t.state = states.wait_for_src;
+				window.location = "editnode.php?&cmd=Save&id=" + t.node.node.id + "&name=" + t.node.node.name + "&host=" + t.node.node.host + "&x=" + evt.clientX + "&y=" + evt.clientY + "&return=map.svg";
+				break;
+			}
+			break;
+		case states.at_rel_src:
+			switch (evt.type) {
+			case "mousedown":
+				t.state = states.dragging_rel;
+				break;
+			case "mouseover":
+				if (evt.target.isNode) {
+					t.state = states.at_node;
+				}
+				break;
+			case "mousemove":
+				var nearNode = getNearNode(evt.clientX, evt.clientY, 15);
+				if (t.srcNode.node != nearNode) {
+					t.state = states.wait_for_src;
+				}
 				break;
 			}
 			break;
@@ -138,6 +191,19 @@ function MouseEventHandler() {
 		}
 	}
 };
+
+function log(s) {
+	var t = logstrings[s];
+	if (!t) {
+		logstrings[s] = s;
+		t = s;
+	}
+	console.log(t);
+}
+
+function clickedNode(node) {
+	window.location = "editnode.php?id=" + node.id + "&return=map.svg";
+}
 
 function createRelation(src, dest) {
 	console.log("createRelation");
@@ -180,17 +246,12 @@ function createSvgNodes(nodes) {
 
 		var svgObj = document.getElementById(node.id);
 		if (svgObj == null) {
-			var docnodes = document.getElementById("nodes");
-			var ael = document.createElementNS(svgNS,"a");
-			ael.setAttributeNS(xlinkNS, "xlink:href","editnode.php?id=" + node.id + "&return=map.svg");
-
-			docnodes.appendChild(ael);
-
 			svgObj = document.createElementNS(svgNS,"circle");
-			ael.appendChild(svgObj);
+			document.getElementById("nodes").appendChild(svgObj);
 			node.svgObj = svgObj;
+			svgObj.node = node;
 			svgObj.setAttributeNS(null, "id", node.id);	
-			svgObj.setAttributeNS(null, "r", 6);		
+			svgObj.setAttributeNS(null, "r", nodeRadius);		
 			svgObj.setAttributeNS(null, "cx", node.x);		
 			svgObj.setAttributeNS(null, "cy", node.y);	
 			svgObj.setAttributeNS(null, "fill","gray");
